@@ -35,12 +35,7 @@ class Sale extends React.Component {
 
     loadData() {
         //for binding all tha table details using Ajax call logic
-        const day = new Date().getDay() + 1;
-        const month = new Date().getMonth() + 1;
-        const year = new Date().getFullYear;
-        this.setState({
-            curTime: day + "-" + month + "-" + year
-        });
+        
 
         // Fetch data of sales
         $.ajax({
@@ -110,21 +105,16 @@ class Sale extends React.Component {
         
         
         var data = {
-            customerId: this.state.selectedCustomer[0].key,
-            productId: this.state.selectedProduct[0].key,
-            storeId: this.state.selectedStore[0].key,
-            customerName: this.state.selectedCustomer[1].value,
-            productName: this.state.selectedProduct[1].value,
-            storeName: this.state.selectedStore[1].value,
+            CustomerId: this.state.selectedCustomer[0].key,
+            ProductId: this.state.selectedProduct[0].key,
+            StoreId: this.state.selectedStore[0].key,
             DateSold: this.state.selectDate
         };
         console.log(data);
-       
         $.ajax({
             url: "/ProductSold/CreateSale",
-            type: "post",
-            dataType: "json",
-            data: JSON.stringify(data),
+            type: "POST",
+            data: data,
             success: data => {
                 console.log(data);
                 this.componentDidMount();
@@ -138,7 +128,7 @@ class Sale extends React.Component {
     //Handle Change Event to Set th Values into States
 
     handleChange(e, data) {
-        console.log(data);
+        
         e.preventDefault();
         const { value } = data;
         const { key } = data.options.find(o => o.value === value); // find id
@@ -146,20 +136,50 @@ class Sale extends React.Component {
         
     }
 
+    
     // Handle update event with ajax call
 
-    update(e) {
-        console.log("hello from update");
+    update(id) {
+        console.log(id);
+        let convert = moment(this.state.newDate).format("DD-MM-YYYY");
+        let data = {
+            CustomerId: this.state.selectedCustomer[0].key,
+            ProductId: this.state.selectedProduct[0].key,
+            StoreId: this.state.selectedStore[0].key,
+            DateSold: convert,
+            id: id
+        };
+        console.log(data);
+        
+        $.ajax({
+            url: "/ProductSold/UpdateSale",
+            type: "POST",
+            data: data,
+            success: data => {
+                console.log(data);
+                this.componentDidMount();
+            }
+        });
+
+
     }
 
     //Handle delete event with ajax call
-    delete(i) {
-        console.log("Hello from delete");
+    delete(id) {
+        console.log(id);
+        $.ajax({
+            url: '/ProductSold/Deletesale',
+            type: 'POST',
+            data: { 'id': id },
+            success: data => {
+                console.log(data);
+                this.componentDidMount()
+            }
+        })
     }
 
     // Handle date update
     handleDate(e) {
-
         e.preventDefault();
         this.setState({ [e.target.name]: e.target.value });
 
@@ -224,7 +244,7 @@ class Sale extends React.Component {
                         </Form.Field>
                         <Form.Field>
                             <Label color="grey">Sale Date</Label><br />
-                            <input type="date" onChange={this.handleDate} name="selectDate" min={this.state.curTime} required /><br />
+                            <input type="date" onChange={this.handleDate} name="selectDate"  required /><br />
                         </Form.Field>
                         <Button type="submit" color="green">Save</Button>
                     </Form>
@@ -236,18 +256,18 @@ class Sale extends React.Component {
         if (saleList !== null) {
             tableData = saleList.map(service =>
                 <Table.Row key={service.id}>
-                    <Table.Cell textAlign="center">{service.customerName}</Table.Cell>
-                    <Table.Cell textAlign="center">{service.productName}</Table.Cell>
-                    <Table.Cell textAlign="center">{service.storeName}</Table.Cell>
+                    <Table.Cell textAlign="center">{service.customer}</Table.Cell>
+                    <Table.Cell textAlign="center">{service.product}</Table.Cell>
+                    <Table.Cell textAlign="center">{service.store}</Table.Cell>
                     <Table.Cell textAlign="center" >{moment(service.dateSold).format("DD/MM/YYYY")}</Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell textAlign="center">
                         <Modal id="updateModal" trigger={<Button color="yellow"><Icon name="edit" />Edit</Button>}>
                             <Modal.Header> Update Sale</Modal.Header>
                             <Modal.Content>
                                 <Form ref="form" method="POST" onSubmit={this.update.bind(this, service.id)}>
                                     <Form.Field>
                                         <Label color="grey">Customer Name</Label><br />
-                                        <Dropdown selection options={this.fillCustomerDropdown(this.state.customerList)} required onChange={this.handleChange} name="selectedCustomer" />
+                                        <Dropdown selection options={this.fillCustomerDropdown(this.state.customerList)} required onChange={this.handleChange} name="selectedCustomer"  />
                                         <br/>
                                     </Form.Field>
                                     <Form.Field>
@@ -262,11 +282,21 @@ class Sale extends React.Component {
                                     </Form.Field>
                                     <Form.Field>
                                         <Label color="grey">Date Sold</Label><br />
-                                        <input type="date" name="newDate" value={moment(service.DateSold).format("YYYY-MM-DD")} required onChange={this.handleDate} /><br />
+                                        <input type="date" name="newDate" defaultValue={moment(service.DateSold).format("YYYY-MM-DD")} required onChange={this.handleDate} /><br />
                                         <br />
                                     </Form.Field>
-                                    <Button type='submit' color="green"><Icon name="save" />Save</Button>
+                                    <Button type='submit' onClick={this.closeModal} color="green"><Icon name="save" />Save</Button>
                                 </Form>
+                            </Modal.Content>
+                        </Modal>
+                    </Table.Cell>
+                    <Table.Cell textAlign="center">
+                        <Modal id="deleteModal" onClose={this.props.onClose} trigger={<Button color="red" onClick={()=>this.delete.bind(this, service.id)}><Icon name="trash" />Delete</Button>}>
+                            <Modal.Header>Delete Sale</Modal.Header>
+                            <Modal.Content>
+                                <Label>Are you sure you want to delete?</Label>
+                                <br /> <br />
+                                <Button id="btnDelete" onClick={this.delete.bind(this, service.id)} color="red"><Icon name="trash" />Delete</Button>
                             </Modal.Content>
                         </Modal>
                     </Table.Cell>

@@ -15,8 +15,6 @@ namespace Boilerplate.Web.App.Models
         public ProductModel Product { get; set; }
         public StoreModel Store { get; set; }
 
-        public string ProductName { get; internal set; }
-        public string StoreName { get; internal set; }
-        public string CustomerName { get; internal set; }
+       
     }
 }

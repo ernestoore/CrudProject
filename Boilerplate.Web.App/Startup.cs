@@ -63,11 +63,11 @@ namespace Boilerplate.Web.App
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Product}/{action=ProductView}/{id?}");
 
                 routes.MapSpaFallbackRoute(
                   name: "spa-fallback",
-                  defaults: new { controller = "Home", action = "Index" });
+                  defaults: new { controller = "Product", action = "ProductView" });
             });
         }
     }

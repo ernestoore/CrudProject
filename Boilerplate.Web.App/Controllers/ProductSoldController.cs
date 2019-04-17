@@ -21,19 +21,12 @@ namespace Boilerplate.Web.App.Controllers
 
            public JsonResult GetProductSoldList()
            {
-                List<ProductSoldModel> sell = db.ProductSold.Select(x => new ProductSoldModel
-                {
-                Id = x.Id,
-                DateSold = x.DateSold,
-                ProductId = x.ProductId,
-                CustomerId = x.CustomerId,
-                StoreId = x.StoreId,
-                ProductName = x.Product.Name,
-                CustomerName = x.Customer.Name,
-                StoreName = x.Store.Name              
-
-                }).ToList();
-            return Json(sell);
+            var getSales = (from ps in db.ProductSold
+                            join c in db.Customer on ps.CustomerId equals c.Id
+                            join p in db.Product on ps.ProductId equals p.Id
+                            join s in db.Store on ps.StoreId equals s.Id
+                            select new { Customer = c.Name, Product = p.Name, Store = s.Name, ps.DateSold, ps.Id }).ToList();
+            return Json(getSales);
            }
 
                 // CREATE SELL
@@ -46,9 +39,6 @@ namespace Boilerplate.Web.App.Controllers
                 sell.CustomerId = productSold.CustomerId;
                 sell.ProductId = productSold.ProductId;
                 sell.StoreId = productSold.StoreId;
-                sell.ProductName = productSold.ProductName;
-                sell.CustomerName = productSold.CustomerName;
-                sell.StoreName = productSold.StoreName;
                 
             }
             try
@@ -67,14 +57,14 @@ namespace Boilerplate.Web.App.Controllers
 
         // Delete SELL
 
-        public JsonResult DeleteSell(int Id)
+        public JsonResult Deletesale(int Id)
         {
             try
             {
-                ProductSoldModel sell = db.ProductSold.Where(x => x.Id == Id).SingleOrDefault();
-                if (sell != null)
+                ProductSoldModel sale = db.ProductSold.Where(x => x.Id == Id).SingleOrDefault();
+                if (ModelState.IsValid)
                 {
-                    db.ProductSold.Remove(sell);
+                    db.ProductSold.Remove(sale);
                     db.SaveChanges();
                     Console.Write("Delete sell successful");
                 }
@@ -107,16 +97,18 @@ namespace Boilerplate.Web.App.Controllers
             }
         }
 
-        public JsonResult UpdateSell(ProductSoldModel productSold)
+        public JsonResult UpdateSale(ProductSoldModel productSold)
         {
+            ProductSoldModel sale = db.ProductSold.Where(x => x.Id == productSold.Id).SingleOrDefault();
+            if (ModelState.IsValid)
+            {
+                sale.DateSold = productSold.DateSold;
+                sale.CustomerId = productSold.CustomerId;
+                sale.ProductId = productSold.ProductId;
+                sale.StoreId = productSold.StoreId;
+            }
             try
             {
-                ProductSoldModel sell = db.ProductSold.Where(x => x.Id == productSold.Id).SingleOrDefault();
-                sell.DateSold = productSold.DateSold;
-                sell.CustomerId = productSold.CustomerId;
-                sell.ProductId = productSold.ProductId;
-                sell.StoreId = productSold.StoreId;
-                db.ProductSold.Add(sell);
                 db.SaveChanges();
             }
             catch (Exception e)
